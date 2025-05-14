@@ -1,0 +1,9 @@
+.vscode
+*.cmi
+*.cmo
+*.cmx
+*.o
+ft_ality
+ft_ality.nc
+test_runner
+.depend

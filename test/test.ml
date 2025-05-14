@@ -1,0 +1,2 @@
+
+let () = Lexer.hello "test"
