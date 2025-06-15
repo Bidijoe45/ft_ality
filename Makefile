@@ -11,13 +11,13 @@ OCAMLFIND = ocamlfind
 SOURCE_DIR = src
 TEST_DIR = test
 
-REQUIRED_PACKAGES = tsdl
-EXTERNAL_LIBS = tsdl
+REQUIRED_PACKAGES =
+EXTERNAL_LIBS =
 LIBS = $(foreach lib,$(EXTERNAL_LIBS),-package $(lib))
 
 # Main program sources
-SOURCES = $(SOURCE_DIR)/main.ml \
-          $(SOURCE_DIR)/lexer.ml
+SOURCES = $(SOURCE_DIR)/lexer.ml \
+          $(SOURCE_DIR)/main.ml
 
 # Sources used for testing (exclude main.ml)
 TESTABLE_SOURCES = $(SOURCE_DIR)/lexer.ml

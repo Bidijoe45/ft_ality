@@ -1,10 +1,8 @@
-q:[LP]:Left Punch;
-w:[RP]:Right Punch;
-a:[LK]:Left Kick;
-s:[RK]:Right Kick;
-f:[B]:Block;
----
-Mega Punch:[B]:[RP]:[LP];
-Surprise Kick:[RP]:[RK];
-Dash:[B]:[RP]:[RK];
-Mega Damage:[LP]:[RP]:[LK]:[RK];
+DOWN RIGHT PUNCH            : Fireball
+LEFT LEFT KICK              : Slide
+UP UP DOWN                  : Dragon Punch
+UP DOWN                     : Mini Bite
+UP DOWN UP DOWN             : Megabite
+UP UP UP                    : Brain Boost
+PUNCH PUNCH PUNCH           : Brain Damage
+LEFT RIGHT LEFT RIGHT PUNCH : Confusing Punch
