@@ -5,10 +5,14 @@ let parse_file (in_chan : in_channel) =
     let line = input_line_opt in_chan in
     match line with
     | None -> acc
-    | Some l -> parse_lines acc @ [(Lexer.tokenize_rule l)]
+    | Some l -> match (Lexer.tokenize_rule l) with
+      | None -> parse_lines acc
+      | Some r -> parse_lines (acc @ [r])
   in parse_lines []
 
 let () =
   let in_channel = open_in "grammar/example.gmr" in
   let production_rules = parse_file in_channel in
-  List.iter (fun rule -> print_endline (Lexer.rule_to_string rule)) production_rules
+  List.iter (fun rule -> print_endline (Lexer.rule_to_string rule)) production_rules;
+  let trie = Automaton.train production_rules in
+  print_endline (Automaton.trie_to_string trie)

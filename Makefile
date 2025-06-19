@@ -17,6 +17,7 @@ LIBS = $(foreach lib,$(EXTERNAL_LIBS),-package $(lib))
 
 # Main program sources
 SOURCES = $(SOURCE_DIR)/lexer.ml \
+          $(SOURCE_DIR)/automaton.ml \
           $(SOURCE_DIR)/main.ml
 
 # Sources used for testing (exclude main.ml)
