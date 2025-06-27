@@ -8,6 +8,5 @@ let rule_to_string (rule : production_rule) : string =
 let tokenize_rule (line : string) : production_rule option =
   let split_line = String.split_on_char ':' line in
   match split_line with
-  | [] -> None
   | tokens :: move :: [] -> Some ((String.split_on_char ' ' (String.trim tokens)), (String.trim move))
   | _ -> None

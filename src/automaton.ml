@@ -16,9 +16,11 @@ let trie_to_string (trie : trie) : string =
   ^ "Accepting_states:\n"
   ^ (List.fold_left (fun acc (s, names) -> acc ^ "  " ^ (string_of_int s) ^ " = [" ^ (list_to_string names) ^ "]\n") "" trie.accepting_states)
 
+let find_transition state token transitions = List.find_opt (fun (s0, (tok, _)) -> s0 = state && tok = token) transitions
+
+let find_accepting_state state accepting_states = List.find_opt (fun (s, _) -> s = state) accepting_states
+
 let train (rules : Lexer.production_rule list) : trie =
-  let find_transition state token transitions = List.find_opt (fun (s0, (tok, _)) -> s0 = state && tok = token) transitions in
-  let find_accepting_state state accepting_states = List.find_opt (fun (s, _) -> s = state) accepting_states in
   let rec process_rule (rule : Lexer.production_rule) (state : state) (next_state : state) (trie : trie) = 
     match rule with
     | ([], move_name) -> begin
@@ -39,3 +41,27 @@ let train (rules : Lexer.production_rule list) : trie =
       let (updated_trie, updated_next_state) = process_rule h 0 next_state trie in
       process_all_rules t updated_next_state updated_trie
   in process_all_rules rules 0 {transitions = []; accepting_states = []}
+
+let run (trie : trie) =
+  let read_line_opt () = try Some (read_line ()) with End_of_file -> None in
+  let recognise state = match find_accepting_state state trie.accepting_states with
+    | None -> print_endline "Unrecognised combo"
+    | Some (_, combos) -> List.iter (fun x -> print_endline x) combos
+  in
+  let rec process_input_tokens tokens state = match tokens with
+    | [] -> recognise state
+    | h :: t -> begin
+      match find_transition state h trie.transitions with
+      | None -> print_endline "Unrecognised combo"
+      | Some (s0, (tok, new_state)) -> print_endline ("found a transition: " ^ (transition_to_string (s0, (tok, new_state))) );
+        process_input_tokens t new_state
+    end
+  in
+  let rec read_input () =
+    match read_line_opt () with
+    | None -> ()
+    | Some input ->
+        let tokens = (String.split_on_char ' ' input) in
+        process_input_tokens tokens 0;
+        read_input ()
+  in read_input ()
