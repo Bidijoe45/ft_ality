@@ -1,8 +1,15 @@
+UP                          : Jump
+DOWN                        : Crouch
+LEFT                        : Step left
+RIGHT                       : Step right
+PUNCH                       : Punch
+KICK                        : Kick
 DOWN RIGHT PUNCH            : Fireball
 LEFT LEFT KICK              : Slide
 UP UP DOWN                  : Dragon Punch
 UP DOWN                     : Mini Bite
 UP DOWN UP DOWN             : Megabite
+UP DOWN UP DOWN             : Bouncy attack
 UP UP UP                    : Brain Boost
 UP UP UP                    : Flying Donkey
 PUNCH PUNCH PUNCH           : Brain Damage

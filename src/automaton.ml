@@ -46,22 +46,22 @@ let run (trie : trie) =
   let read_line_opt () = try Some (read_line ()) with End_of_file -> None in
   let recognise state = match find_accepting_state state trie.accepting_states with
     | None -> print_endline "Unrecognised combo"
-    | Some (_, combos) -> List.iter (fun x -> print_endline x) combos
+    | Some (_, combos) -> List.iter (fun x -> print_endline (x ^ "!")) combos
   in
-  let rec process_input_tokens tokens state = match tokens with
+  let rec process_input_symbols tokens state = match tokens with
     | [] -> recognise state
     | h :: t -> begin
       match find_transition state h trie.transitions with
       | None -> print_endline "Unrecognised combo"
-      | Some (s0, (tok, new_state)) -> print_endline ("found a transition: " ^ (transition_to_string (s0, (tok, new_state))) );
-        process_input_tokens t new_state
+      | Some (s0, (tok, new_state)) -> (* print_endline (transition_to_string (s0, (tok, new_state))); *)
+        process_input_symbols t new_state
     end
   in
   let rec read_input () =
     match read_line_opt () with
     | None -> ()
     | Some input ->
-        let tokens = (String.split_on_char ' ' input) in
-        process_input_tokens tokens 0;
+        let symbols = (String.split_on_char ' ' input) in
+        process_input_symbols symbols 0;
         read_input ()
   in read_input ()
