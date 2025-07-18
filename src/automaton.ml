@@ -48,12 +48,12 @@ let run (trie : trie) =
     | None -> print_endline "Unrecognised combo"
     | Some (_, combos) -> List.iter (fun x -> print_endline (x ^ "!")) combos
   in
-  let rec process_input_symbols tokens state = match tokens with
+  let rec process_input_symbols symbols state = match symbols with
     | [] -> recognise state
     | h :: t -> begin
       match find_transition state h trie.transitions with
       | None -> print_endline "Unrecognised combo"
-      | Some (s0, (tok, new_state)) -> (* print_endline (transition_to_string (s0, (tok, new_state))); *)
+      | Some (s0, (token, new_state)) -> (* print_endline (transition_to_string (s0, (token, new_state))); *)
         process_input_symbols t new_state
     end
   in
