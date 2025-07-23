@@ -63,12 +63,12 @@ let run (trie : trie) (input : string) =
   let trans (symbol : string) (state : state) =
     match find_transition state symbol trie.transitions with
       | None -> (None, state)
-      | Some (s0, (token, s1)) ->
-        begin
-          match find_accepting_state s1 trie.accepting_states with
-          | None -> (Some [], s1)
-          | Some (_, combos) -> (Some combos, s1)
-        end
+      | Some (s0, (token, s1)) -> (Some token, s1)
+  in
+  let accept (state : state) =
+    match find_accepting_state state trie.accepting_states with
+      | None -> (None, state)
+      | Some (_, combos) -> (Some combos, state)
   in
 
   let symbols = (String.split_on_char ' ' input) in
@@ -76,12 +76,14 @@ let run (trie : trie) (input : string) =
     match list with
     | [] -> return last_combos
     | h :: t ->
-      let* combos = (trans h) in
-      match combos with
+      let* transition = trans h in
+      match transition with
         | None -> return None
-        | Some combo_list ->
-            List.iter (fun x -> print_endline (x ^ "!")) combo_list;
-            match combo_list with
-            | [] -> process_symbols t None
-            | _ -> process_symbols t combos
+        | Some token ->
+          let* combos = accept in
+          match combos with
+            | None -> process_symbols t None
+            | Some combo_list ->
+                List.iter (fun x -> print_endline (x ^ "!")) combo_list;
+                process_symbols t combos
   in process_symbols symbols None
