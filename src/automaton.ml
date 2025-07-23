@@ -1,8 +1,24 @@
 type state = int
+
+type 'a t = state -> 'a * state
+
+let bind (t : 'a t) (f : 'a -> 'b t) : 'b t =
+  fun state ->
+    (* apply the first state transition first *)
+    let a, transient_state = t state in
+    (* and then the second *)
+    let b, final_state = f a transient_state in
+    (* return these *)
+    (b, final_state)
+
+let return (a : 'a) = fun (state : state) -> (a, state)
+
+let (let*) = bind
+
 type transition = state * (Lexer.token * state)
 type trie = {
   transitions : transition list;
-  accepting_states : (int * string list) list
+  accepting_states : (state * string list) list
 }
 
 let transition_to_string (transition : transition) : string =
@@ -42,26 +58,30 @@ let train (rules : Lexer.production_rule list) : trie =
       process_all_rules t updated_next_state updated_trie
   in process_all_rules rules 0 {transitions = []; accepting_states = []}
 
-let run (trie : trie) =
-  let read_line_opt () = try Some (read_line ()) with End_of_file -> None in
-  let recognise state = match find_accepting_state state trie.accepting_states with
-    | None -> print_endline "Unrecognised combo"
-    | Some (_, combos) -> List.iter (fun x -> print_endline (x ^ "!")) combos
+let run (trie : trie) (input : string) =
+
+  let trans (symbol : string) (state : state) =
+    match find_transition state symbol trie.transitions with
+      | None -> (None, state)
+      | Some (s0, (token, s1)) ->
+        begin
+          match find_accepting_state s1 trie.accepting_states with
+          | None -> (Some [], s1)
+          | Some (_, combos) -> (Some combos, s1)
+        end
   in
-  let rec process_input_symbols symbols state = match symbols with
-    | [] -> recognise state
-    | h :: t -> begin
-      match find_transition state h trie.transitions with
-      | None -> print_endline "Unrecognised combo"
-      | Some (s0, (token, new_state)) -> (* print_endline (transition_to_string (s0, (token, new_state))); *)
-        process_input_symbols t new_state
-    end
-  in
-  let rec read_input () =
-    match read_line_opt () with
-    | None -> ()
-    | Some input ->
-        let symbols = (String.split_on_char ' ' input) in
-        process_input_symbols symbols 0;
-        read_input ()
-  in read_input ()
+
+  let symbols = (String.split_on_char ' ' input) in
+  let rec process_symbols list last_combos =
+    match list with
+    | [] -> return last_combos
+    | h :: t ->
+      let* combos = (trans h) in
+      match combos with
+        | None -> return None
+        | Some combo_list ->
+            List.iter (fun x -> print_endline (x ^ "!")) combo_list;
+            match combo_list with
+            | [] -> process_symbols t None
+            | _ -> process_symbols t combos
+  in process_symbols symbols None
