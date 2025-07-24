@@ -12,7 +12,7 @@ SOURCE_DIR = src
 TEST_DIR = test
 
 REQUIRED_PACKAGES =
-EXTERNAL_LIBS =
+EXTERNAL_LIBS = Unix
 LIBS = $(foreach lib,$(EXTERNAL_LIBS),-package $(lib))
 
 # Main program sources

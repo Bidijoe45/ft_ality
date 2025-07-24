@@ -80,15 +80,24 @@ let run (trie : trie) =
           | None -> return (Some [])
           | Some combo_list -> return (Some combo_list)
   in
-  let read_line_opt () = try Some (read_line ()) with End_of_file -> None in
+
+  let get_one_char () =
+    let termio = Unix.tcgetattr Unix.stdin in
+    let () = Unix.tcsetattr Unix.stdin Unix.TCSAFLUSH
+            { termio with Unix.c_icanon = false } in
+    let res = input_char stdin in
+    Unix.tcsetattr Unix.stdin Unix.TCSAFLUSH termio;
+    res
+  in
 
   let rec process_input (state : state) =
-    match read_line_opt () with
-    | None -> ()
-    | Some input ->
-      if input = "quit" then ()
-      else if input = "reset" then process_input 0
-      else let result, new_state = process_symbol (String.trim input) state in
+    let input = Unix.handle_unix_error get_one_char () in
+    print_endline "";
+    match input with
+    | 'q' -> ()
+    | 'r' -> process_input 0
+    | _ ->
+      let result, new_state = process_symbol (String.make 1 input) state in
       match result with
       | None -> print_endline "Unrecognised combo";
         process_input 0
