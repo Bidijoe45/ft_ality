@@ -22,11 +22,4 @@ let () =
   (* List.iter (fun rule -> print_endline (Lexer.rule_to_string rule)) production_rules; *)
   let trie = Automaton.train production_rules in
   (* print_endline (Automaton.trie_to_string trie); *)
-  let read_line_opt () = try Some (read_line ()) with End_of_file -> None in
-  let rec read_input () = match read_line_opt () with
-    | None -> ()
-    | Some input ->
-        let result, _ = Automaton.run trie input 0 in
-        if (Option.is_none result) then print_endline "Unrecognised combo.";
-        read_input ()
-  in read_input ()
+  Automaton.run trie

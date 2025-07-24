@@ -58,11 +58,11 @@ let train (rules : Lexer.production_rule list) : trie =
       process_all_rules t updated_next_state updated_trie
   in process_all_rules rules 0 {transitions = []; accepting_states = []}
 
-let run (trie : trie) (input : string) =
+let run (trie : trie) =
 
   let trans (symbol : string) (state : state) =
     match find_transition state symbol trie.transitions with
-      | None -> (None, state)
+      | None -> (None, 0)
       | Some (s0, (token, s1)) -> (Some token, s1)
   in
   let accept (state : state) =
@@ -70,20 +70,28 @@ let run (trie : trie) (input : string) =
       | None -> (None, state)
       | Some (_, combos) -> (Some combos, state)
   in
+  let process_symbol (symbol : string) =
+    let* transition = trans symbol in
+    let* combos = accept in
+    match transition with
+      | None -> return None
+      | Some token ->
+        match combos with
+          | None -> return (Some [])
+          | Some combo_list -> return (Some combo_list)
+  in
+  let read_line_opt () = try Some (read_line ()) with End_of_file -> None in
 
-  let symbols = (String.split_on_char ' ' input) in
-  let rec process_symbols list last_combos =
-    match list with
-    | [] -> return last_combos
-    | h :: t ->
-      let* transition = trans h in
-      match transition with
-        | None -> return None
-        | Some token ->
-          let* combos = accept in
-          match combos with
-            | None -> process_symbols t None
-            | Some combo_list ->
-                List.iter (fun x -> print_endline (x ^ "!")) combo_list;
-                process_symbols t combos
-  in process_symbols symbols None
+  let rec process_input (state : state) =
+    match read_line_opt () with
+    | None -> ()
+    | Some input ->
+      if input = "quit" then ()
+      else if input = "reset" then process_input 0
+      else let result, new_state = process_symbol (String.trim input) state in
+      match result with
+      | None -> print_endline "Unrecognised combo";
+        process_input 0
+      | Some combos -> List.iter (fun x -> print_endline (x ^ "!")) combos;
+        process_input new_state
+  in process_input 0
