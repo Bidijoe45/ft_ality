@@ -16,7 +16,8 @@ EXTERNAL_LIBS = Unix
 LIBS = $(foreach lib,$(EXTERNAL_LIBS),-package $(lib))
 
 # Main program sources
-SOURCES = $(SOURCE_DIR)/lexer.ml \
+SOURCES = $(SOURCE_DIR)/grammar_lexer.ml \
+          $(SOURCE_DIR)/grammar_parser.ml \
           $(SOURCE_DIR)/automaton.ml \
           $(SOURCE_DIR)/main.ml
 
