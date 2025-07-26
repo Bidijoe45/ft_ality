@@ -81,6 +81,7 @@ module Parser = struct
       | _ -> None
     in
 
+    (* TODO: refactor this *)
     let rec parse_production_rules rules_tokens acc =
       let line, rest = split_by_token rules_tokens Newline [] in
       match line with
