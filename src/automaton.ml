@@ -15,9 +15,9 @@ let return (a : 'a) = fun (state : state) -> (a, state)
 
 let (let*) = bind
 
-type key = Grammar_parser.key
+type key = Grammar.key
 type symbol = string
-type combo_name = Grammar_parser.combo_name
+type combo_name = Grammar.combo_name
 
 type transition = state * (symbol * state)
 
@@ -37,14 +37,14 @@ let trie_to_string (trie : trie) : string =
   ^ "Accepting_states:\n"
   ^ (List.fold_left (fun acc (s, names) -> acc ^ "  " ^ (string_of_int s) ^ " = [" ^ (list_to_string names) ^ "]\n") "" trie.accepting_states)
 
-let find_key_mapping (key : key) (mappings : Grammar_parser.key_mapping list) = List.find_opt (fun (k, _) -> k = key) mappings
+let find_key_mapping (key : key) (mappings : Grammar.key_mapping list) = List.find_opt (fun (k, _) -> k = key) mappings
 
 let find_transition (state : state) (symbol : symbol) (transitions : transition list) = List.find_opt (fun (s0, (sym, _)) -> s0 = state && sym = symbol) transitions
 
 let find_accepting_state (state : state) (accepting_states : (state * combo_name list) list) = List.find_opt (fun (s, _) -> s = state) accepting_states
 
-let train (rules : Grammar_parser.production_rule list) : trie =
-  let rec process_rule (rule : Grammar_parser.production_rule) (state : state) (next_state : state) (trie : trie) = 
+let train (rules : Grammar.production_rule list) : trie =
+  let rec process_rule (rule : Grammar.production_rule) (state : state) (next_state : state) (trie : trie) = 
     match rule with
     | ([], move_name) -> begin
         match find_accepting_state state trie.accepting_states with
@@ -65,7 +65,7 @@ let train (rules : Grammar_parser.production_rule list) : trie =
       process_all_rules t updated_next_state updated_trie
   in process_all_rules rules 0 {transitions = []; accepting_states = []}
 
-let run (key_mappings : Grammar_parser.key_mapping list) (trie : trie) =
+let run (key_mappings : Grammar.key_mapping list) (trie : trie) =
 
   let trans (symbol : symbol) (state : state) =
     match find_transition state symbol trie.transitions with
@@ -103,8 +103,8 @@ let run (key_mappings : Grammar_parser.key_mapping list) (trie : trie) =
     | None -> print_endline "Unrecognised key";
       process_input 0
     | Some (_, symbol) -> begin match symbol with
-      | Grammar_parser.Quit -> ()
-      | Grammar_parser.Reset -> process_input 0
+      | Grammar.Quit -> ()
+      | Grammar.Reset -> process_input 0
       | Symbol sym -> 
         let result, new_state = process_symbol sym state in
         match result with
