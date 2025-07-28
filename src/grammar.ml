@@ -2,8 +2,8 @@ type token = Word of string | Colon | Newline
 type key = char
 type symbol = Quit | Reset | Symbol of string
 type combo_name = string
-type key_mapping = (key * symbol)
-type production_rule = (string list * combo_name)
+type key_mapping = key * symbol
+type production_rule = string list * combo_name
 
 let token_to_string (token : token) : string =
   match token with
@@ -44,75 +44,68 @@ end
 
 module Parser = struct
 
-  let parse (tokens : token list) : (key_mapping list * production_rule list) option = 
-    let rec split_file_sections list acc =
-      match list with
-      | [] -> None
-      | Newline :: Newline :: t ->
-        let rec filtered_tail tail = match tail with
-        | [] -> []
-        | Newline :: t -> filtered_tail t
-        | _ -> tail
-        in Some (acc @ [Newline], (filtered_tail t))
-      | h :: t -> split_file_sections t (acc @ [h])
-    in
+  let rec split_file_sections (list : token list) (acc : token list) : (token list * token list) option =
+    match list with
+    | [] -> None
+    | Newline :: Newline :: t ->
+      let rec filter_tail tail = match tail with
+      | [] -> []
+      | Newline :: t -> filter_tail t
+      | _ -> tail
+      in let filtered_tail = filter_tail t
+      in if List.is_empty filtered_tail then None else
+      let rec too_many_sections_check tail = match tail with
+      | [] -> Some ()
+      | Newline :: Newline :: t -> None
+      | h :: t -> too_many_sections_check t
+      in Option.bind (too_many_sections_check filtered_tail) (fun x -> Some (acc @ [Newline], filtered_tail))
+    | h :: t -> split_file_sections t (acc @ [h])
 
-    let rec split_by_token (list : token list) (sep : token) (acc : token list) =
-      match list with
-      | [] -> (acc, [])
-      | h :: t when h = sep -> (acc, t)
-      | h :: t -> split_by_token t sep (acc @ [h])
-    in
+  let rec split_by_token (list : token list) (sep : token) acc : token list * token list =
+    match list with
+    | [] -> (acc, [])
+    | h :: t when h = sep -> (acc, t)
+    | h :: t -> split_by_token t sep (acc @ [h])
 
-    let string_to_symbol str =
-      if str = "QUIT" then Quit else if str = "RESET" then Reset else Symbol str
-    in
+  let string_to_symbol (str : string) : symbol =
+    if str = "QUIT" then Quit else if str = "RESET" then Reset else Symbol str
 
-    let rec parse_key_mappings key_mappings_tokens acc =
-      match key_mappings_tokens with
-      | [] -> Some acc
-      | h1 :: h2 :: h3 :: h4 :: t -> begin
-        match h1, h2, h3, h4 with
-        | Word key, Colon, Word value, Newline ->
-          if String.length key <> 1 then None else
-          parse_key_mappings t (acc @ [((String.get key 0), (string_to_symbol value))])
-        | _ -> None
-        end
+  let rec parse_key_mappings (key_mappings_tokens : token list) acc : (key * symbol) list option =
+    match key_mappings_tokens with
+    | [] -> Some acc
+    | h1 :: h2 :: h3 :: h4 :: t -> begin
+      match h1, h2, h3, h4 with
+      | Word key, Colon, Word value, Newline ->
+        if String.length key <> 1 then None else
+        parse_key_mappings t (acc @ [((String.get key 0), (string_to_symbol value))])
       | _ -> None
-    in
-
-    (* TODO: refactor this *)
-    let rec parse_production_rules rules_tokens acc =
-      let line, rest = split_by_token rules_tokens Newline [] in
-      match line with
-      | [] -> Some acc
-      | _ ->
-        let symbols_tokens, combo_tokens = split_by_token line Colon [] in
-        let extract_word token = match token with | Word w -> Some w | _ -> None in
-        let fold_left_opt f acc list = List.fold_left (fun acc x -> match acc with | None -> None | Some acc -> f acc x) (Some acc) list in
-        let symbols = fold_left_opt (fun acc x -> match (extract_word x) with
-          | None -> None
-          | Some s -> Some (acc @ [s])
-          ) [] symbols_tokens in
-        let combo = fold_left_opt (fun acc x -> match (extract_word x) with
-          | None -> None
-          | Some s -> Some (acc ^ (if acc = "" then "" else " ") ^ s)
-          ) "" combo_tokens in
-        match symbols, combo with
-        | Some symbols, Some combo -> parse_production_rules rest (acc @ [(symbols, combo)])
-        | _ -> None
-    in
-
-    match split_file_sections tokens [] with
-    | None -> None
-    | Some (key_mappings_tokens, rules_tokens) ->
-      begin match parse_key_mappings key_mappings_tokens [] with
-      | None -> None
-      | Some key_mappings -> begin
-        match parse_production_rules rules_tokens [] with
-        | None -> None
-        | Some production_rules -> Some (key_mappings, production_rules)
-        end
       end
+    | _ -> None
+
+  let rec parse_production_rules (rules_tokens : token list) acc : (string list * combo_name) list option =
+    let (let*) = Option.bind in
+    let line, rest = split_by_token rules_tokens Newline [] in
+    match line with
+    | [] -> Some acc
+    | _ ->
+      let symbols_tokens, combo_tokens = split_by_token line Colon [] in
+      if List.is_empty symbols_tokens || List.is_empty combo_tokens then None else
+      let fold_left_opt f acc list = List.fold_left (fun acc x -> let* acc = acc in f acc x) (Some acc) list in
+      let* symbols = fold_left_opt (fun acc x -> match x with
+        | Word w -> Some (acc @ [w])
+        | _ -> None
+        ) [] symbols_tokens in
+      let* combo = fold_left_opt (fun acc x -> match x with
+        | Word w -> Some (acc ^ (if acc = "" then "" else " ") ^ w)
+        | _ -> None
+        ) "" combo_tokens in
+      parse_production_rules rest (acc @ [(symbols, combo)])
+
+  let parse (tokens : token list) : (key_mapping list * production_rule list) option = 
+    let (let*) = Option.bind in
+    let* (key_mappings_tokens, rules_tokens) = split_file_sections tokens [] in
+    let* key_mappings = parse_key_mappings key_mappings_tokens [] in
+    let* production_rules = parse_production_rules rules_tokens [] in
+    Some (key_mappings, production_rules)
 
 end

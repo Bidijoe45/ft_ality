@@ -6,6 +6,7 @@ type key_mapping = (key * symbol)
 type production_rule = (string list * combo_name)
 
 val key_mapping_to_string : key_mapping -> string
+val rule_to_string : production_rule -> string
 
 module Lexer : sig
     val tokenize : in_channel -> token list

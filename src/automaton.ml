@@ -65,18 +65,22 @@ let train (rules : Grammar.production_rule list) : trie =
 
   in process_all_rules rules 0 {transitions = []; accepting_states = []}
 
-let run (key_mappings : Grammar.key_mapping list) (trie : trie) =
+let run (key_mappings : Grammar.key_mapping list) (trie : trie) (debug_mode : bool) =
 
   let trans (symbol : symbol) (state : state) =
     match find_transition state symbol trie.transitions with
       | None -> (None, 0)
-      | Some (s0, (sym, s1)) -> (Some sym, s1)
+      | Some (s0, (sym, s1)) ->
+        if debug_mode then print_endline (transition_to_string (s0, (sym, s1)));
+        (Some sym, s1)
   in
 
   let accept (state : state) =
     match find_accepting_state state trie.accepting_states with
       | None -> (None, state)
-      | Some (_, combos) -> (Some combos, state)
+      | Some (_, combos) ->
+        if debug_mode then List.iter (fun x -> print_endline ("Found accepting state for " ^ x ^ " at: " ^ (string_of_int state))) combos;
+        (Some combos, state)
   in
 
   let process_symbol (symbol : symbol) =
@@ -105,7 +109,7 @@ let run (key_mappings : Grammar.key_mapping list) (trie : trie) =
     match find_key_mapping input key_mappings with
     | None -> print_endline "Unrecognised key";
       process_input 0
-    | Some (_, symbol) -> begin match symbol with
+    | Some (_, symbol) -> match symbol with
       | Quit -> ()
       | Reset -> process_input 0
       | Symbol sym -> 
@@ -115,5 +119,4 @@ let run (key_mappings : Grammar.key_mapping list) (trie : trie) =
           process_input 0
         | Some combos -> List.iter (fun x -> print_endline (x ^ "!")) combos;
           process_input new_state
-      end
   in process_input 0
