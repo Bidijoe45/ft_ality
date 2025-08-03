@@ -17,10 +17,9 @@ let () =
   let tokens = Grammar.Lexer.tokenize in_channel in
 
   match Grammar.Parser.parse tokens with
-  | None -> print_endline "Invalid file"
+  | None -> print_endline "Invalid file"; exit 1
   | Some (key_mappings, production_rules) ->
     List.iter (fun x -> print_endline (Grammar.key_mapping_to_string x)) key_mappings;
     if debug_mode then List.iter (fun x -> print_endline (Grammar.rule_to_string x)) production_rules;
     let trie = Automaton.train production_rules in
-    (* print_endline (Automaton.trie_to_string trie); *)
     Automaton.run key_mappings trie debug_mode
