@@ -5,7 +5,8 @@ SOURCES = $(SOURCE_DIR)/grammar.mli \
           $(SOURCE_DIR)/automaton.mli \
           $(SOURCE_DIR)/automaton.ml \
           $(SOURCE_DIR)/main.ml
-PACKS = Unix
+LIBS = unix
+#PACKS = Unix
 OCAMLMAKEFILE = OCamlMakefile
 
 -include OCamlMakefile
